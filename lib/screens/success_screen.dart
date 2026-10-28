@@ -1,6 +1,7 @@
-
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+
+import 'welcome_screen.dart';
 
 class SuccessScreen extends StatefulWidget {
   const SuccessScreen({super.key, required this.name});
@@ -13,16 +14,38 @@ class SuccessScreen extends StatefulWidget {
 
 class _SuccessScreenState extends State<SuccessScreen> {
   late final ConfettiController _confettiController;
+  bool _redirecting = false;
 
   @override
   void initState() {
     super.initState();
+
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 4),
     );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _confettiController.play();
+      if (!mounted) return;
+
+      // Task C: reject empty or whitespace-only names.
+      if (widget.name.trim().isEmpty) {
+        _redirectToWelcome();
+        return;
+      }
+
+      _confettiController.play();
     });
+  }
+
+  void _redirectToWelcome() {
+    if (!mounted || _redirecting) return;
+
+    _redirecting = true;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const WelcomeScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -33,6 +56,11 @@ class _SuccessScreenState extends State<SuccessScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Avoid displaying a blank-name success message during redirection.
+    if (widget.name.trim().isEmpty) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Welcome to PawPal'),
@@ -48,14 +76,10 @@ class _SuccessScreenState extends State<SuccessScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.pets,
-                      size: 86,
-                      color: Color(0xFF6B4EFF),
-                    ),
+                    const Icon(Icons.pets, size: 86, color: Color(0xFF6B4EFF)),
                     const SizedBox(height: 20),
                     Text(
-                      'You’re in the pack, ${widget.name}!',
+                      'You’re in the pack, ${widget.name.trim()}!',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
@@ -68,9 +92,8 @@ class _SuccessScreenState extends State<SuccessScreen> {
                     const SizedBox(height: 28),
                     FilledButton.icon(
                       onPressed: () {
-                        Navigator.of(context).popUntil(
-                          (route) => route.isFirst,
-                        );
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst);
                       },
                       icon: const Icon(Icons.home_outlined),
                       label: const Text('Back to welcome'),

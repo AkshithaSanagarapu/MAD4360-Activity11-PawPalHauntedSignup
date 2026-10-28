@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+
 import 'success_screen.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -54,10 +54,20 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _submit() async {
+    // Task C: block duplicate submissions, even if called directly.
     if (_isSubmitting) return;
 
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
+
+    // Defensively reject an empty or whitespace-only name.
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter your name.')));
+      return;
+    }
 
     if (_birthDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,16 +81,12 @@ class _SignupScreenState extends State<SignupScreen> {
     // Simulate signup processing; no account is created or stored.
     await Future<void>.delayed(const Duration(seconds: 2));
 
+    // Task C: don't navigate if this screen was disposed during loading.
     if (!mounted) return;
 
-    final name = _nameController.text.trim();
-
-    setState(() => _isSubmitting = false);
-
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => SuccessScreen(name: name),
-      ),
+    // Replace Signup with Success to prevent returning to the completed form.
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => SuccessScreen(name: name)),
     );
   }
 
@@ -99,11 +105,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(
-                      Icons.pets,
-                      size: 58,
-                      color: Color(0xFF6B4EFF),
-                    ),
+                    const Icon(Icons.pets, size: 58, color: Color(0xFF6B4EFF)),
                     const SizedBox(height: 8),
                     Text(
                       'Create your PawPal account',
@@ -122,8 +124,8 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       validator: (value) =>
                           value == null || value.trim().isEmpty
-                              ? 'Please enter your name.'
-                              : null,
+                          ? 'Please enter your name.'
+                          : null,
                     ),
                     const SizedBox(height: 14),
 
@@ -163,9 +165,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ? Icons.visibility_off
                                 : Icons.visibility,
                           ),
-                          onPressed: () => setState(
-                            () => _showPassword = !_showPassword,
-                          ),
+                          onPressed: () =>
+                              setState(() => _showPassword = !_showPassword),
                         ),
                       ),
                       validator: (value) {
@@ -194,15 +195,13 @@ class _SignupScreenState extends State<SignupScreen> {
                                 : Icons.visibility,
                           ),
                           onPressed: () => setState(
-                            () => _showConfirmPassword =
-                                !_showConfirmPassword,
+                            () => _showConfirmPassword = !_showConfirmPassword,
                           ),
                         ),
                       ),
-                      validator: (value) =>
-                          value != _passwordController.text
-                              ? 'Passwords do not match.'
-                              : null,
+                      validator: (value) => value != _passwordController.text
+                          ? 'Passwords do not match.'
+                          : null,
                     ),
                     const SizedBox(height: 14),
 
@@ -221,9 +220,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       onPressed: _isSubmitting
                           ? null
                           : () => setState(() {
-                                _tipIndex = (_tipIndex + 1) % _tips.length;
-                                _showTip = true;
-                              }),
+                              _tipIndex = (_tipIndex + 1) % _tips.length;
+                              _showTip = true;
+                            }),
                       icon: const Icon(Icons.lightbulb_outline),
                       label: const Text('Get a password tip'),
                     ),
@@ -244,9 +243,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.pets),
                       label: Text(
